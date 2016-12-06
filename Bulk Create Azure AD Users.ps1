@@ -227,14 +227,14 @@ foreach ($ArrayUser in $ArrayUsers)
     if (!($ArrayUser))
     {
         Write-Warning -Message 'User array cannot be NULL'
-        break
+        exit
 
     }
 
     if (!($ArrayUser[0]) -or !($ArrayUser[1]))
     {
         Write-Warning -Message 'User[0] or User[1] cannot be NULL'
-        break
+        exit
     }
 
     Clear-Variable -Name NewUser, UpdatedUser -ErrorAction SilentlyContinue -Force
@@ -310,7 +310,7 @@ foreach ($ArrayUser in $ArrayUsers)
         catch
         {
             Write-Warning -Message "Unable to create user $UserPrincipalName."
-            break
+            exit
         }
     }
 
@@ -342,7 +342,7 @@ foreach ($ArrayUser in $ArrayUsers)
         catch
         {
             Write-Warning -Message "Unable to update user $($NewUser.UserPrincipalName)."
-            break
+            exit
         }
     }
 }
