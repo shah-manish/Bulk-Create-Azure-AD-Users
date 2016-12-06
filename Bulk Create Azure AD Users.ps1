@@ -6,6 +6,18 @@ param
 (
 )
 
+function IsWindows
+{
+    $IsVars = Get-Variables is*
+    if ([String]::IsNullOrEmpty($IsVars))
+    {
+        $return = $true
+    } else {
+        $return = $false
+    }
+    return $return
+}
+
 function Write-Status
 {
 	param
@@ -127,7 +139,7 @@ function Set-CustomExecutionPolicy
 
 		[Parameter(Mandatory)]
 		[ValidateNotNullOrEmpty()]
-        [ValidateSet("RemoteSigned")]
+        [ValidateSet("Unrestricted", "RemoteSigned")]
 		[System.String]$ExecutionPolicy
 	)
 
@@ -151,16 +163,25 @@ $VerbosePreference = "Continue"
 
 Write-Status -Message "Starting script $($MyInvocation.MyCommand)"
 
-# Check PowerShell is running as administrator
-If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”))
+# Check PowerShell is running as administrator (Windows) or root (Linux & MacOS)
+if (IsWindows)
 {
-    Write-Warning “You do not have Administrator rights to run this script!`nPlease re-run this script as an Administrator!”
-    break
+    If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”))
+    {
+        Write-Warning “You do not have Administrator rights to run this script!`nPlease re-run this script as an Administrator!”
+        exit
+    }
+}
+else {
+    if ((Invoke-Expression 'whoami') -ne "root")
+    {
+        Write-Warning “You do not have root access to run this script!`nPlease restart PowerShell with sudo!”
+        exit
+    }
 }
 
 # Set PowerShell execution policies
-Set-CustomExecutionPolicy -Scope 'LocalMachine' -ExecutionPolicy RemoteSigned
-Set-CustomExecutionPolicy -Scope 'CurrentUser' -ExecutionPolicy RemoteSigned
+Set-CustomExecutionPolicy -Scope 'LocalMachine' -ExecutionPolicy Unrestricted
 
 # Install pre-requisite PowerShell modules
 Install-PowerShellModule -RepositoryName 'PSGallery' -ModuleName 'AzureAD'
