@@ -15,9 +15,15 @@ function Write-Status
 		[System.String]$Message
 	)
 
-    $host.PrivateData.VerboseBackgroundColor = 'Green'
+    if ($psise) {
+        $host.PrivateData.VerboseBackgroundColor = 'Green'
+    }
+
     Write-Verbose -Message $Message
-    $host.PrivateData.VerboseBackgroundColor = $host.PrivateData.DefaultOptions.VerboseBackgroundColor
+
+    if ($psise) {
+        $host.PrivateData.VerboseBackgroundColor = $host.PrivateData.DefaultOptions.VerboseBackgroundColor
+    }
 }
 
 function Install-PowerShellModule
@@ -32,17 +38,6 @@ function Install-PowerShellModule
 		[ValidateNotNullOrEmpty()]
 		[System.String]$ModuleName
 	)
-
-	Try
-	{
-		$Repository = Get-PSRepository -Name $RepositoryName -ErrorAction Stop
-        Write-Status -Message "Get PowerShell repository $RepositoryName"
-	}
-	catch
-	{
-		Write-Warning -Message "Unable to find PowerShell repository $RepositoryName"
-        exit
-	}
 
 	Try
 	{
@@ -69,15 +64,21 @@ function Install-PowerShellModule
 	{
         try
         {
-		    $Module = Install-Module `
-					      -Name $ModuleName `
-					      -RequiredVersion $ModuleLatest.Version `
-					      -Repository $Repository.Name `
-					      -Scope AllUsers `
-                          -SkipPublisherCheck `
-                          -AllowClobber `
-                          -Force `
-                          -ErrorAction Stop
+
+            # Create splat for the cmdlet arguments
+            $splat = @{
+                Name = $ModuleName 
+                RequiredVersion = $ModuleLatest.Version 
+                Repository = $Repository.Name 
+                Scope = AllUsers 
+                SkipPublisherCheck = $true 
+                AllowClobber = $true
+                Force = $true
+                ErrorAction = Stop
+            }
+
+		    $Module = Install-Module @splat
+					      
 		    Write-Status -Message "Installed PowerShell module $ModuleName v$($ModuleLatest.Version) from repository $($Repository.Name)"
         }
         catch
@@ -90,15 +91,20 @@ function Install-PowerShellModule
 	{
         try
         {
-		    $Module = Install-Module `
-					      -Name $ModuleName `
-					      -RequiredVersion $ModuleLatest.Version `
-					      -Repository $Repository.Name `
-					      -Scope AllUsers `
-                          -SkipPublisherCheck `
-                          -AllowClobber `
-                          -Force `
-                          -ErrorAction Stop
+
+            # Create splat for the cmdlet arguments
+            $splat = @{
+                Name = $ModuleName 
+                RequiredVersion = $ModuleLatest.Version 
+                Repository = $Repository.Name 
+                Scope = AllUsers 
+                SkipPublisherCheck = $true 
+                AllowClobber = $true
+                Force = $true
+                ErrorAction = Stop
+            }
+
+		    $Module = Install-Module @splat
 		    Write-Status -Message "Updated PowerShell module $ModuleName from v$($ModuleInstalled.Version) to v$($ModuleLatest.Version) from repository $($Repository.Name)"
         }
         catch
@@ -262,18 +268,22 @@ foreach ($ArrayUser in $ArrayUsers)
     {
         try
         {
-            $NewUser = New-AzureADUser -DisplayName $DisplayName `
-                                       -GivenName $GivenName `
-                                       -Surname $Surname `
-                                       -UserPrincipalName $UserPrincipalName `
-                                       -MailNickName $MailNickName `
-                                       -TelephoneNumber $TelephoneNumber `
-                                       -Country $Country `
-                                       -UsageLocation $UsageLocation `
-                                       -AccountEnabled $true `
-                                       -UserType $UserType `
-                                       -PasswordProfile $PasswordProfile `
-                                       -ErrorAction Stop
+            $splat = @{
+                DisplayName = $DisplayName 
+                GivenName = $GivenName 
+                Surname = $Surname 
+                UserPrincipalName = $UserPrincipalName 
+                MailNickName = $MailNickName 
+                TelephoneNumber = $TelephoneNumber 
+                Country = $Country 
+                UsageLocation = $UsageLocation 
+                AccountEnabled = $true 
+                UserType = $UserType 
+                PasswordProfile = $PasswordProfile 
+                ErrorAction = Stop
+            }
+
+            $NewUser = NewAzureADUser @splat
             Write-Status -Message "Created user $UserPrincipalName."
         }
         catch
@@ -287,21 +297,25 @@ foreach ($ArrayUser in $ArrayUsers)
     {
         try
         {
-#            $UpdatedUser = Set-AzureADUser -ObjectId $NewUser.ObjectId `
-             Set-AzureADUser -ObjectId $NewUser.ObjectId `
-                             -DisplayName $UpdatedDisplayName `
-                             -GivenName $UpdatedGivenName `
-                             -Surname $UpdatedSurname `
-                             -UserPrincipalName $UpdatedUserPrincipalName `
-                             -MailNickName $UpdatedMailNickName `
-                             -TelephoneNumber $TelephoneNumber `
-                             -Country $Country `
-                             -UsageLocation $UsageLocation `
-                             -AccountEnabled $true `
-                             -UserType $UserType `
-                             -PasswordProfile $PasswordProfile `
-                             -OtherMails $UserPrincipalName `
-                             -ErrorAction Stop
+
+            $splat = @{
+                ObjectId = $NewUser.ObjectId
+                DisplayName = $UpdatedDisplayName
+                GivenName = $UpdatedGivenName
+                Surname = $UpdatedSurname
+                UserPrincipalName = $UpdatedUserPrincipalName
+                MailNickName = $UpdatedMailNickName
+                TelephoneNumber = $TelephoneNumber
+                Country = $Country
+                UsageLocation = $UsageLocation
+                AccountEnabled = $true
+                UserType = $UserType
+                PasswordProfile = $PasswordProfile
+                OtherMails = $UserPrincipalName
+                ErrorAction = Stop
+            }
+
+             Set-AzureADUser @splat
             Write-Status -Message "Updated user $($NewUser.UserPrincipalName) to $($UpdatedUserPrincipalName)"
         }
         catch
