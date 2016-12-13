@@ -295,9 +295,9 @@ foreach ($AzureRMSubscription in $AzureRMSubscriptions)
         $VirtualMachines = Get-AzureRmVM -Status
         Write-Status -Message "Subscription $($AzureRMSubscription.SubscriptionId) has $($VirtualMachines.Count) Virtual Machines"
         
-        Action-VMs -VirtualMachines $VirtualMachines -Action $Action
+        #Action-VMs -VirtualMachines $VirtualMachines -Action $Action
 
-        <#foreach ($VirtualMachine in $VirtualMachines)
+        foreach ($VirtualMachine in $VirtualMachines)
         {
             if ($($VirtualMachine.PowerState) -ne "VM running")
             {
@@ -308,10 +308,10 @@ foreach ($AzureRMSubscription in $AzureRMSubscriptions)
                 }
                 catch
                 {
-                    Write-Status -Message "Unable to start Virtual Machine $VirtualMachine.Name"
+                    Write-Status -Message "Unable to start Virtual Machine $($VirtualMachine.Name)"
                 }
             }
-        }#>
+        }
     }
     catch
     {
