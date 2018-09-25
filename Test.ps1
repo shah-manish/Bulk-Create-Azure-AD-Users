@@ -1,1 +1,1 @@
-Hello
+write-host "hello"
